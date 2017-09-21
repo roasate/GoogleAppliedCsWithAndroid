@@ -25,21 +25,39 @@ public class CircularLinkedList implements Iterable<Point> {
     private class Node {
         Point point;
         Node prev, next;
-        /**
-         **
-         **  YOUR CODE GOES HERE
-         **
-         **/
+        private Node(Point p)
+        {
+            point = p;
+            next = null;
+            prev = null;
+        }
     }
 
     Node head;
 
     public void insertBeginning(Point p) {
-        /**
-         **
-         **  YOUR CODE GOES HERE
-         **
-         **/
+       Node n= new Node(p);
+        if(head == null )
+        {
+            head = n;
+            head.prev=head;
+            head.next=head;
+
+
+        }
+        else
+        {
+            Node oldNode = head.prev;
+            n.next = head;
+            n.prev = oldNode;
+            head.prev = n;
+            oldNode.next = n;
+        }
+
+
+
+
+
     }
 
     private float distanceBetween(Point from, Point to) {
@@ -48,28 +66,103 @@ public class CircularLinkedList implements Iterable<Point> {
 
     public float totalDistance() {
         float total = 0;
-        /**
-         **
-         **  YOUR CODE GOES HERE
-         **
-         **/
+        CircularLinkedListIterator iterator = new CircularLinkedListIterator();
+        while (iterator.hasNext())
+        {
+            Point p1 = iterator.current.point;
+            Point p2 = iterator.current.next.point;
+            total+=distanceBetween(p1,p2);
+            iterator.next();
+
+        }
         return total;
     }
 
     public void insertNearest(Point p) {
-        /**
-         **
-         **  YOUR CODE GOES HERE
-         **
-         **/
+        CircularLinkedListIterator iterator = new CircularLinkedListIterator();
+        Node newNode = new Node(p);
+
+        if (head == null){
+            head = newNode;
+            head.next = head;
+            head.prev = head;
+        }
+        else {
+            // find which node is the nearest first
+            Node nearestNode = null;
+            float nearestDist = 999999;
+            while (iterator.hasNext()) {
+                if (nearestNode == null) {
+                    nearestNode = iterator.current;
+                    nearestDist = distanceBetween(iterator.current.point, p);
+                } else {
+                    float distance = distanceBetween(iterator.current.point, p);
+
+                    if (nearestDist > distance) {
+                        // you found a new nearest node
+                        nearestDist = distance;
+                        nearestNode = iterator.current;
+                    }
+                }
+                iterator.next();
+            }
+            Node tempPrev = nearestNode.prev;
+
+            nearestNode.prev = newNode;
+            newNode.next = nearestNode;
+            newNode.prev = tempPrev;
+            tempPrev.next = newNode;
+        }
     }
 
+
     public void insertSmallest(Point p) {
-        /**
-         **
-         **  YOUR CODE GOES HERE
-         **
-         **/
+        Node newNode = new Node(p);
+
+        if (head == null){
+            head = newNode;
+            head.next = head;
+            head.prev = head;
+        }
+        else{
+            CircularLinkedListIterator iterator = new CircularLinkedListIterator();
+            Node smallestDistParentNode = null;
+            float smallestChange = 999999;
+
+            while(iterator.hasNext()){
+                Node currentNode = iterator.current;
+                Node previousNode = currentNode.prev;
+
+                // only has one node, just do insertBeginning
+                if (previousNode == currentNode){
+                    insertBeginning(p);
+                }
+                else if(smallestDistParentNode == null){
+                    smallestDistParentNode = currentNode;
+                    float currentDist = distanceBetween(currentNode.point, previousNode.point);
+                    float changedDist = distanceBetween(currentNode.point, newNode.point) + distanceBetween(previousNode.point, newNode.point);
+                    smallestChange = changedDist - currentDist;
+                }
+                else {
+                    float currentDist = distanceBetween(currentNode.point, previousNode.point);
+                    float changedDist = distanceBetween(currentNode.point, newNode.point) + distanceBetween(previousNode.point, newNode.point);
+                    float difference = changedDist - currentDist;
+
+                    if (smallestChange > difference) {
+                        // you found the edge that produces a smaller total distance
+                        smallestChange = difference;
+                        smallestDistParentNode = currentNode;
+                    }
+                }
+                iterator.next();
+            }
+            Node tempPrev = smallestDistParentNode.prev;
+
+            smallestDistParentNode.prev = newNode;
+            newNode.next = smallestDistParentNode;
+            newNode.prev = tempPrev;
+            tempPrev.next = newNode;
+        }
     }
 
     public void reset() {

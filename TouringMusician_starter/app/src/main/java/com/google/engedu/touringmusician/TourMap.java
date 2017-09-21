@@ -27,17 +27,27 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 public class TourMap extends View {
 
     private Bitmap mapImage;
     private CircularLinkedList list = new CircularLinkedList();
     private String insertMode = "Add";
+    private ArrayList<CircularLinkedList> modes = new ArrayList<>();
+
+    private CircularLinkedList beginList = new CircularLinkedList();
+    private CircularLinkedList closestList = new CircularLinkedList();
+    private CircularLinkedList smallestList = new CircularLinkedList();
 
     public TourMap(Context context) {
         super(context);
         mapImage = BitmapFactory.decodeResource(
                 getResources(),
                 R.drawable.map);
+        modes.add(beginList);
+        modes.add(smallestList);
+        modes.add(closestList);
     }
 
     @Override
@@ -46,24 +56,38 @@ public class TourMap extends View {
         canvas.drawBitmap(mapImage, 0, 0, null);
         Paint pointPaint = new Paint();
         pointPaint.setColor(Color.RED);
-        /**
-         **
-         **  YOUR CODE GOES HERE
-         **
-         **/
-        for (Point p : list) {
-            /**
-             **
-             **  YOUR CODE GOES HERE
-             **
-             **/
-            canvas.drawCircle(p.x, p.y, 20, pointPaint);
+
+        for(CircularLinkedList list : modes) {
+            int index = modes.indexOf(list);
+            // change colors depending on mode
+            if (index == 0) {
+                pointPaint.setColor(Color.BLUE);
+            }
+            if (index == 1) {
+                pointPaint.setColor(Color.BLACK);
+            }
+            if (index == 2) {
+                pointPaint.setColor(Color.RED);
+            }
+            pointPaint.setStyle(Paint.Style.FILL);
+
+            // keep track of the previous node for drawing the lines
+            Point beginning = null;
+            Point finalp = null;
+            Point previous = null;
+            for (Point p : list) {
+                if (previous != null) {
+                    // draw the line if you have a previous point
+                    canvas.drawLine(previous.x, previous.y, p.x, p.y, pointPaint);
+                } else
+                    beginning = p;
+                canvas.drawCircle(p.x, p.y, 5, pointPaint);
+                previous = p;
+                finalp = p;
+            }
+            if (finalp != null && beginning != null)
+                canvas.drawLine(finalp.x, finalp.y, beginning.x, beginning.y, pointPaint);
         }
-        /**
-         **
-         **  YOUR CODE GOES HERE
-         **
-         **/
     }
 
     @Override
@@ -72,24 +96,36 @@ public class TourMap extends View {
             case MotionEvent.ACTION_DOWN:
                 Point p = new Point((int) event.getX(), (int)event.getY());
                 if (insertMode.equals("Closest")) {
-                    list.insertNearest(p);
+                    closestList.insertNearest(p);
                 } else if (insertMode.equals("Smallest")) {
-                    list.insertSmallest(p);
+                    smallestList.insertSmallest(p);
                 } else {
-                    list.insertBeginning(p);
+                    beginList.insertBeginning(p);
                 }
-                TextView message = (TextView) ((Activity) getContext()).findViewById(R.id.game_status);
-                if (message != null) {
-                    message.setText(String.format("Tour length is now %.2f", list.totalDistance()));
+                TextView message1 = (TextView) ((Activity) getContext()).findViewById(R.id.game_status1);
+                TextView message2 = (TextView) ((Activity) getContext()).findViewById(R.id.game_status2);
+                TextView message3 = (TextView) ((Activity) getContext()).findViewById(R.id.game_status3);
+                if (message1 != null) {
+                    float totalDistance = beginList.totalDistance();
+                    message1.setText(String.format("beginList Tour length is now %.2f", totalDistance));
                 }
-                invalidate();
+                if (message2 != null) {
+                    float totalDistance = closestList.totalDistance();
+                    message2.setText(String.format("closestList Tour length is now %.2f", totalDistance));
+                }
+                if (message3 != null) {
+                    float totalDistance = smallestList.totalDistance();
+                    message3.setText(String.format("smallestList Tour length is now %.2f", totalDistance));
+                }                invalidate();
                 return true;
         }
         return super.onTouchEvent(event);
     }
 
     public void reset() {
-        list.reset();
+        closestList.reset();
+        smallestList.reset();
+        beginList.reset();
         invalidate();
     }
 

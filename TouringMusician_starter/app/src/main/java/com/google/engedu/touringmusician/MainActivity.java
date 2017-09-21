@@ -61,9 +61,18 @@ public class MainActivity extends AppCompatActivity {
 
     public void onReset(View v) {
         map.reset();
-        TextView message = (TextView) findViewById(R.id.game_status);
-        if (message != null) {
-            message.setText("Tap map to add new tour stops.");
+        TextView message1 = (TextView) findViewById(R.id.game_status1);
+        TextView message2 = (TextView) findViewById(R.id.game_status2);
+        TextView message3 = (TextView) findViewById(R.id.game_status3);
+
+        if (message1 != null) {
+            message1.setText("Tap map to add new tour stops.");
+        }
+        if (message2 != null) {
+            message2.setText("Tap map to add new tour stops.");
+        }
+        if (message3 != null) {
+            message3.setText("Tap map to add new tour stops.");
         }
     }
 }
